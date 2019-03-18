@@ -1,27 +1,27 @@
 <template>
   <footer class="footer_guide border-1px">
-    <a href="javascript:;" class="guide_item on">
-    <span class="item_icon">
-      <i class="iconfont icon-waimai"></i>
-    </span>
+    <a href="javascript:;" class="guide_item" @click="goTo('/msite')" :class="{on: $route.path === '/msite'}">
+      <span class="item_icon">
+        <i class="iconfont icon-waimai"></i>
+      </span>
       <span>外卖</span>
     </a>
-    <a href="javascript:;" class="guide_item">
-    <span class="item_icon">
-      <i class="iconfont icon-search"></i>
-    </span>
+    <a href="javascript:;" class="guide_item" @click="goTo('/search')" :class="{on: $route.path === '/search'}">
+      <span class="item_icon">
+        <i class="iconfont icon-search"></i>
+      </span>
       <span>搜索</span>
     </a>
-    <a href="javascript:;" class="guide_item">
-    <span class="item_icon">
-      <i class="iconfont icon-dingdan"></i>
-    </span>
+    <a href="javascript:;" class="guide_item" @click="goTo('/order')" :class="{on: $route.path === '/order'}">
+      <span class="item_icon">
+        <i class="iconfont icon-dingdan"></i>
+      </span>
       <span>订单</span>
     </a>
-    <a href="javascript:;" class="guide_item">
-    <span class="item_icon">
-      <i class="iconfont icon-geren"></i>
-    </span>
+    <a href="javascript:;" class="guide_item" @click="goTo('/profile')" :class="{on: $route.path === '/profile'}">
+      <span class="item_icon">
+        <i class="iconfont icon-geren"></i>
+      </span>
       <span>我的</span>
     </a>
   </footer>
@@ -30,13 +30,18 @@
 <script>
 
 export default {
-
+  methods: {
+    goTo (pash) {
+      this.$router.replace(pash)
+//      console.log(this.$route)
+    }
+  }
 }
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus">
   @import "../../common/stylus/mixins.styl"
-  .footer_guide
+  .footer_guide  //footer
     top-border-1px(#e4e4e4)
     position fixed
     z-index 100
@@ -54,13 +59,14 @@ export default {
       flex-direction column
       align-items center
       margin 5px
-  color #999999
-    &.on
-      color #02a774
-    span
-      font-size 12px
-      margin-top 2px
-      margin-bottom 2px
-      .iconfont
-        font-size 22px
+      color #999999
+
+      &.on
+        color #02a774
+      span
+        font-size 12px
+        margin-top 2px
+        margin-bottom 2px
+        .iconfont
+          font-size 22px
 </style>
