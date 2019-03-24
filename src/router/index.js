@@ -10,6 +10,11 @@ import Search from '../pages/Search/Search.vue'
 import Order from '../pages/Order/Order.vue'
 import Profile from '../pages/Profile/Profile.vue'
 import Login from '../pages/Login/Login.vue'
+import UserInfo from '../components/UserInfo/UserInfo.vue'
+import Shop from '../pages/Shop/Shop.vue'
+import ShopGoods from '../pages/Shop/ShopGoods/ShopGoods.vue'
+import ShopRatings from '../pages/Shop/ShopRatings/ShopRatings.vue'
+import ShopInfo from '../pages/Shop/ShopInfo/ShopInfo.vue'
 //创建路由器并配置路由
 export default new VueRouter({
   mode: 'history',
@@ -17,7 +22,7 @@ export default new VueRouter({
     {
       path: '/msite',
       component: MSite,
-      meta: {isShow: true}
+      meta: {isShow: true},
     },
     {
       path: '/search',
@@ -35,14 +40,39 @@ export default new VueRouter({
       meta: {isShow: true}
     },
     {
+      path: '/',
+      redirect: '/msite'
+    },
+    {
       path: '/login',
       component: Login
     },
     {
-      path: '/',
-      component: MSite
+      path: '/userinfo',
+      component: UserInfo
+    },
+    {
+      path: '/shop',
+      component: Shop,
+      children: [
+        {
+          path: '/shop/goods',
+          component: ShopGoods
+        },
+        {
+          path: '/shop/ratings',
+          component: ShopRatings
+        },
+        {
+          path: '/shop/info',
+          component: ShopInfo
+        },
+        {
+          path: '/shop',
+          redirect: '/shop/goods'
+        }
+      ]
     }
-
   ]
 })
 

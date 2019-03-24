@@ -4,44 +4,45 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" @click="addClass" :class="{on: $data.on}">短信登录</a>
-          <a href="javascript:;" @click="addClass" :class="{on: !$data.on}">密码登录</a>
+          <a href="javascript:;" @click="addClass = true" :class="{on: addClass}">短信登录</a>
+          <a href="javascript:;" @click="addClass = false" :class="{on: !addClass}">密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div :class="{on: !$data.on}">
+          <div :class="{on: addClass}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号">
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
+              <button :disabled= "!isVerifyPhone || countDownTime > 0" class="get_verification"
+                      :class="{right_phone_number: isVerifyPhone && countDownTime === 0}" @click.prevent="sendCode">{{countDownTime > 0 ? `已发送${countDownTime}s` : '获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="tel" maxlength="6" placeholder="验证码" v-model="code">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div :class="{on: $data.on}">
+          <div :class="{on: !addClass}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="tel" maxlength="11" minlength="4" placeholder="用户名" v-model="name">
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input :type="isPwdShow ? 'tel' : 'password'" minlength="5" maxlength="8" placeholder="密码" v-model="pwd">
+                <div class="switch_button"  :class="isPwdShow ? 'on' : 'off'" @click="isPwdShow = !isPwdShow">
+                  <div :class="isPwdShow ? 'switch_circle right' : 'switch_circle'" ></div>
+                  <span class="switch_text">{{isPwdShow ? isSwitchText : ''}}</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha">
+                <input type="text" maxlength="6" placeholder="验证码" v-model="captcha" >
+                <img class="get_verification" src="http://localhost:5000/captcha" ref='captcha' alt="captcha" @click="resetCaptcha">
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -53,18 +54,84 @@
 </template>
 
 <script>
-
+import {reqSendSmsCode,reqPhoneCodeLogin,reqUserPwdLogin} from '../../Api'
+import { MessageBox ,Toast} from 'mint-ui'
   export default {
 
     data () {
       return {
-        on: true
+        addClass: true,
+        phone: '',//手机号
+        captcha: '',//验证码
+        name: '',//用户名
+        pwd: '',//密码
+        code: '',//短信验证码
+        countDownTime: 0, //倒计时间
+        isPwdShow: false,
+        isSwitchText: 'ABC'
       }
     },
-    props: [],
+    computed: {
+      isVerifyPhone () {
+        return /^1\d{10}/.test(this.phone)
+      }
+
+    },
     methods: {
-      addClass () {
-       this.$data.on = !this.$data.on
+      async sendCode (e) {
+        e.target.classList.remove('right_phone_number')
+        this.countDownTime = 30
+        console.log(this.phone)
+        const result= await reqSendSmsCode(this.phone)
+        console.log(result)
+        const timerCode = setInterval(() => {
+          this.countDownTime--
+          if(this.countDownTime === 0){
+            clearInterval(timerCode)
+          }
+        },1000)
+      },
+      async login () {
+        const {code,addClass,name,pwd,captcha,phone} = this
+        let result
+        const isCode = /^\d{6}/.test(code)
+        if(addClass){
+          if(!this.isVerifyPhone){
+            return alert('请输入正确的手机号码')
+          }else if(!isCode || !this.code.length === 6){
+            return alert('验证码必须是6位数字')
+          }
+          result = await reqPhoneCodeLogin(phone,code)
+        }else {
+          if(!name.trim()){
+            return MessageBox.alert('请输入用户名')
+          } else if(!pwd.trim()){
+            return MessageBox.alert('请输入正确密码')
+          }else if(!/^.{4}$/.test(captcha)){
+            return MessageBox.alert('请输入正确验证码')
+          }
+          result = await reqUserPwdLogin({name,pwd,captcha})
+        }
+        console.log(111)
+        if(result.code === 0){
+          const user = result.data
+          this.$store.dispatch('saveUser',user)
+          this.$router.replace('/profile')
+          this.resetCaptcha()
+          console.log(111)
+          Toast({
+            message: '登陆成功',
+            position: 'middle',
+            duration: 2000
+          })
+        } else {
+          MessageBox.alert('输入的密码或验证码有问题')
+          this.resetCaptcha()
+          this.pwd = ''
+        }
+      },
+      resetCaptcha () {
+        this.$refs.captcha.src = 'http://localhost:5000/captcha/?d='+Date.now()
       }
     },
     components: {}
@@ -125,12 +192,14 @@
               .get_verification
                 position absolute
                 top 50%
-                right 10px
+                right 5px
                 transform translateY(-50%)
                 border 0
                 color #ccc
                 font-size 14px
                 background transparent
+                &.right_phone_number
+                  color #000
             .login_verification
               position relative
               margin-top 16px
@@ -171,6 +240,8 @@
                   background #fff
                   box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                   transition transform .3s
+                  &.right
+                    transform translateX(27px)
             .login_hint
               margin-top 12px
               color #999

@@ -1,23 +1,26 @@
 <template>
  <div>
    <router-view></router-view>
-   <FooterGuide></FooterGuide>
+   <FooterGuide v-show="$route.meta.isShow"/>
  </div>
 </template>
 
 <script>
   import FooterGuide from './components/FooterGuide/FooterGuide.vue'
-  import {reqAddress,reqCategorys,reqShops} from './Api'
+  import {reqSessionUserInfo} from './Api'
   export default {
 
     name: 'App',
     components: {
       FooterGuide
     },
-   async mounted () {
-      console.log(111)
-      const result = await reqAddress(40.10038,116.36867)
-      console.log(result)
+    async mounted () {
+      const result = await reqSessionUserInfo()
+      const user = result.data
+      if(user){
+        this.$store.dispatch('saveUser',user)
+
+      }
     }
   }
 </script>

@@ -13,9 +13,11 @@
 
   export default {
 
-    props: [
-      'title'
-    ],
+    props: {
+      title: String
+    },
+
+
 
     components: {}
   }
